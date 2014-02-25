@@ -13,6 +13,7 @@ var pdfLinks = [];
 
 function openBhopalPage() {
     this.echo("Opening Bhopal Page");
+    this.echo("Clicking on 6th link for Bhopal");
     this.waitForSelector('.listing_lft_sec_inner > a:nth-child(6)', function() {
         this.click('.listing_lft_sec_inner > a:nth-child(6)');
         this.waitWhileSelector('.listing_lft_sec_inner', getTabs);
@@ -30,17 +31,21 @@ function getTabs() {
 function parseTab() {
     this.each(tabList, function(self, tabId) {
         self.then(function() {
+            this.echo("Click on tab with id " + tabId);
             this.click("#" + tabId + " a");
         });
         self.then(function() {
+            this.echo("Waiting until tab is selcted");
             this.waitForSelector("#" + tabId + ".tab_loc_uns", function() {
                 this.wait(2000);
                 this.waitForSelector("#pageDropDown", function() {
                     var options = this.getElementsAttribute('#pageDropDown option', 'value');
                     var data;
+                    this.echo("Getting possible options from pageDropDown");
                     this.each(options, function(self, option) {
                         self.then(function sendAJAX() {
                             var wsurl = "http://epaper.bhaskar.com" + option;
+                            this.echo("Sending request to "+ wsurl);
                             data = casper.evaluate(function(wsurl) {
                                 return __utils__.sendAJAX(wsurl);
                             }, {
@@ -58,7 +63,9 @@ function parseTab() {
         });
     });
     this.then(function() {
-        utils.dump(pdfLinks);
+        var fs = require('fs');
+        fs.write("links.json", JSON.stringify(pdfLinks), 'w');
+        this.echo("generated links.json");
     });
 }
 
