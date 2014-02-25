@@ -2,13 +2,14 @@ var casper = require('casper').create({
     verbose: false,
     logLevel: 'debug',
     pageSettings: {
-        loadImages: true,
+        loadImages: false,
         loadPlugins: false,
         userAgent: 'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.2 Safari/537.36'
     }
 });
 var utils = require('utils');
 var tabList = [];
+var pdfLinks = [];
 
 function openBhopalPage() {
     this.echo("Opening Bhopal Page");
@@ -40,19 +41,24 @@ function parseTab() {
                     this.each(options, function(self, option) {
                         self.then(function sendAJAX() {
                             var wsurl = "http://epaper.bhaskar.com" + option;
-                            utils.dump(wsurl);
-                            data = casper.evaluate(function() {
+                            data = casper.evaluate(function(wsurl) {
                                 return __utils__.sendAJAX(wsurl);
+                            }, {
+                                wsurl: wsurl
                             });
                         });
                         self.then(function() {
-                            utils.dump(data);
+                            var startIndex = data.indexOf("http://digitalimages.bhaskar.com");
+                            var indexOfAlt = data.indexOf("alt=\"Download PDF\"")
+                            pdfLinks.push(data.substring(startIndex, indexOfAlt - 2));
                         });
                     });
-                    this.capture(tabId + ".png");
                 });
             }, null, 10000);
         });
+    });
+    this.then(function() {
+        utils.dump(pdfLinks);
     });
 }
 
